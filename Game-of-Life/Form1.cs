@@ -13,7 +13,7 @@ namespace Game_of_Life
     public partial class Form1 : Form
     {
         // The universe array
-        bool[,] universe = new bool[5, 5];
+        bool[,] universe = new bool[20, 20];
 
         // Drawing colors
         Color gridColor = Color.Black;
@@ -30,21 +30,124 @@ namespace Game_of_Life
             InitializeComponent();
 
             // Setup the timer
+            
             timer.Interval = 100; // milliseconds
             timer.Tick += Timer_Tick;
-            timer.Enabled = true; // start timer running
+            timer.Enabled = false; // start timer running
+
         }
 
         // Calculate the next generation of cells
-        private void NextGeneration()
+        private void NextGeneration() // Majority of work here      <<<------
         {
+            int neighborCount = 0;
+            bool[,] scratchPad = new bool[universe.Length, universe.Length];
+            // Itterate through current generation.
+            for (int y = 0; y < universe.GetLength(1); y++)
+            {
+                for (int x = 0; x < universe.GetLength(0); x++)
+                {
+                    if (terrainTypeToolStripMenuItem == finiteToolStripMenuItem)
+                    {
+                        // Get neighbor count per cell
+                        neighborCount = CountNeighborsFinite(x, y);
+                    }
+                    else if (terrainTypeToolStripMenuItem == teroidalToolStripMenuItem)
+                    {
+                        neighborCount = CountNeighborsToroidal(x, y);
+                    }
+                }
+            }
+                    
 
+                    // Apply rules of GOL
 
-            // Increment generation count
-            generations++;
+                    // Turn cells on/off in second array
+
+                    // Swap second array with the original "universe" array
+
+                    // Increment generation count
+                    generations++;
 
             // Update status strip generations
             toolStripStatusLabelGenerations.Text = "Generations = " + generations.ToString();
+        }
+
+        private int CountNeighborsFinite(int x, int y)
+        {
+            int count = 0;
+            int xLen = universe.GetLength(0);
+            int yLen = universe.GetLength(1);
+            for (int yOffset = -1; yOffset <= 1; yOffset++)
+            {
+                for (int xOffset = -1; xOffset <= 1; xOffset++)
+                {
+                    int xCheck = x + xOffset;
+                    int yCheck = y + yOffset;
+                    
+                    if (xOffset == 0 && yOffset == 0)    // if xOffset and yOffset are both equal to 0 then continue
+                    {
+                        continue;
+                    }
+                    else if (xCheck < 0)    // if xCheck is less than 0 then continue
+                    {
+                        continue;
+                    }
+                    else if (yCheck < 0)    // if yCheck is less than 0 then continue
+                    {
+                        continue;
+                    }
+                    else if (xCheck >= xLen)    // if xCheck is greater than or equal too xLen then continue
+                    {
+                        continue;
+                    }
+                    else if (yCheck >= yLen)    // if yCheck is greater than or equal too yLen then continue
+                    {
+                        continue;
+                    }
+
+                    if (universe[xCheck, yCheck] == true) count++;
+                }
+            }
+            return count;
+        }
+
+        private int CountNeighborsToroidal(int x, int y)
+        {
+            int count = 0;
+            int xLen = universe.GetLength(0);
+            int yLen = universe.GetLength(1);
+            for (int yOffset = -1; yOffset <= 1; yOffset++)
+            {
+                for (int xOffset = -1; xOffset <= 1; xOffset++)
+                {
+                    int xCheck = x + xOffset;
+                    int yCheck = y + yOffset;
+                    if (xOffset == 0 && yOffset == 0)    // if xOffset and yOffset are both equal to 0 then continue
+                    {
+                        continue;
+                    }
+                    else if (xCheck < 0)    // if xCheck is less than 0 then set to xLen - 1
+                    {
+                        xLen = -1;
+                    }
+                    else if (yCheck < 0)    // if yCheck is less than 0 then set to yLen - 1
+                    {
+                        yLen = -1;
+                    }
+                    else if (xCheck >= xLen)    // if xCheck is greater than or equal too xLen then set to 0
+                    {
+                        xCheck = 0;
+                    }
+                    else if (yCheck >= yLen)    // if yCheck is greater than or equal too yLen then set to 0
+                    {
+                        yCheck = 0;
+                    }
+
+                    if (universe[xCheck, yCheck] == true) count++;
+                }
+            }
+            return count;
         }
 
         // The event called by the timer every Interval milliseconds.
@@ -57,9 +160,9 @@ namespace Game_of_Life
         {
             // Calculate the width and height of each cell in pixels
             // CELL WIDTH = WINDOW WIDTH / NUMBER OF CELLS IN X
-            int cellWidth = graphicsPanel1.ClientSize.Width / universe.GetLength(0);
+            float cellWidth = (float)graphicsPanel1.ClientSize.Width / universe.GetLength(0);
             // CELL HEIGHT = WINDOW HEIGHT / NUMBER OF CELLS IN Y
-            int cellHeight = graphicsPanel1.ClientSize.Height / universe.GetLength(1);
+            float cellHeight = (float)graphicsPanel1.ClientSize.Height / universe.GetLength(1);
 
             // A Pen for drawing the grid lines (color, width)
             Pen gridPen = new Pen(gridColor, 1);
@@ -74,7 +177,8 @@ namespace Game_of_Life
                 for (int x = 0; x < universe.GetLength(0); x++)
                 {
                     // A rectangle to represent each cell in pixels
-                    Rectangle cellRect = Rectangle.Empty;
+                    RectangleF cellRect = Rectangle.Empty;
+                    //Rectangle cellRect = Rectangle.Empty;
                     cellRect.X = x * cellWidth;
                     cellRect.Y = y * cellHeight;
                     cellRect.Width = cellWidth;
@@ -102,26 +206,55 @@ namespace Game_of_Life
             if (e.Button == MouseButtons.Left)
             {
                 // Calculate the width and height of each cell in pixels
-                int cellWidth = graphicsPanel1.ClientSize.Width / universe.GetLength(0);
-                int cellHeight = graphicsPanel1.ClientSize.Height / universe.GetLength(1);
+                float cellWidth = (float)graphicsPanel1.ClientSize.Width / universe.GetLength(0);
+                float cellHeight = (float)graphicsPanel1.ClientSize.Height / universe.GetLength(1);
 
                 // Calculate the cell that was clicked in
                 // CELL X = MOUSE X / CELL WIDTH
-                int x = e.X / cellWidth;
+                float x = e.X / cellWidth;
                 // CELL Y = MOUSE Y / CELL HEIGHT
-                int y = e.Y / cellHeight;
+                float y = e.Y / cellHeight;
 
                 // Toggle the cell's state
-                universe[x, y] = !universe[x, y];
+                universe[(int)x, (int)y] = !universe[(int)x, (int)y];
 
                 // Tell Windows you need to repaint
+                // DON'T FORGET TO CALL ME!!!           <<<--------
                 graphicsPanel1.Invalidate();
             }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Close();
+            this.Close();       // Allows the user to exit the program through File -> Exit Tool Strip
+        }
+
+        private void toolStripPlayButton_Click(object sender, EventArgs e)
+        {
+            timer.Start();      // Starts the Game of life on button click
+        }
+
+        private void toolStripPauseButton_Click(object sender, EventArgs e)
+        {
+            timer.Stop();       // Stops the Game of life on button click
+        }
+
+        private void toolStripOneGenFwd_Click(object sender, EventArgs e)
+        {
+            NextGeneration();       // Displays the next generation
+        }
+
+        private void newToolStripButton_Click(object sender, EventArgs e)
+        {
+            for (int y = 0; y < universe.GetLength(1); y++)
+            {
+                // Iterate through the universe in the x, left to right
+                for (int x = 0; x < universe.GetLength(0); x++)
+                {
+                    universe[x, y] = false;
+                }
+            }
+            graphicsPanel1.Invalidate();
         }
     }
 }
