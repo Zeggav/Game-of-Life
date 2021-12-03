@@ -63,7 +63,6 @@ namespace Game_of_Life
 
                     // Apply rules of GOL
                     // Turn cells on/off in second array
-
                     if (universe[x, y] == true && neighborCount < 2)
                     {
                         scratchPad[x, y] = false;
@@ -80,14 +79,10 @@ namespace Game_of_Life
                     {
                         scratchPad[x, y] = true;
                     }
-
-                    // Swap second array with the original 'universe' array
-                    
                 }
             }
 
             // Swap second array with the original 'universe' array
-
             for (int y = 0; y < universe.GetLength(1); y++)
             {
                 for (int x = 0; x < universe.GetLength(0); x++)
@@ -95,6 +90,8 @@ namespace Game_of_Life
                     universe[x, y] = scratchPad[x, y];
                 }
             }
+
+
 
             // Increment generation count
             generations++;
@@ -161,21 +158,21 @@ namespace Game_of_Life
                     {
                         continue;
                     }
-                    else if (xCheck < 0)    // if xCheck is less than 0 then set to xLen - 1
+                    if (xCheck < 0)    // if xCheck is less than 0 then set to xLen - 1
                     {
                         xCheck = xLen - 1;
                     }
-                    else if (yCheck < 0)    // if yCheck is less than 0 then set to yLen - 1
+                    if (yCheck < 0)    // if yCheck is less than 0 then set to yLen - 1
                     {
-                        xCheck = yLen - 1;
+                        yCheck = yLen - 1;
                     }
-                    else if (xCheck >= xLen)    // if xCheck is greater than or equal too xLen then set to 0
+                    if (xCheck >= xLen)    // if xCheck is greater than or equal too xLen then set to 0
                     {
                         xCheck = 0;
                     }
-                    else if (yCheck >= yLen)    // if yCheck is greater than or equal too yLen then set to 0
+                    if (yCheck >= yLen)    // if yCheck is greater than or equal too yLen then set to 0
                     {
-                        xCheck = 0;
+                        yCheck = 0;
                     }
 
                     if (universe[xCheck, yCheck] == true)
