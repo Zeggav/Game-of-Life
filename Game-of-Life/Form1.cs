@@ -40,37 +40,68 @@ namespace Game_of_Life
         // Calculate the next generation of cells
         private void NextGeneration() // Majority of work here      <<<------
         {
+            //bool isAlive = false;
             int neighborCount = 0;
-            bool[,] scratchPad = new bool[universe.Length, universe.Length];
-            // Itterate through current generation.
+            bool[,] scratchPad = new bool[universe.GetLength(0), universe.GetLength(1)];
+            // Itterate through current universe generation.
             for (int y = 0; y < universe.GetLength(1); y++)
             {
                 for (int x = 0; x < universe.GetLength(0); x++)
                 {
-                    if (terrainTypeToolStripMenuItem == finiteToolStripMenuItem)
-                    {
-                        // Get neighbor count per cell
-                        neighborCount = CountNeighborsFinite(x, y);
-                    }
-                    else if (terrainTypeToolStripMenuItem == teroidalToolStripMenuItem)
-                    {
-                        neighborCount = CountNeighborsToroidal(x, y);
-                    }
-                }
-            }
-                    
+                    //if (terrainTypeToolStripMenuItem == finiteToolStripMenuItem)
+                    //{
+                    //    // Get neighbor count per cell
+                    //    neighborCount = CountNeighborsFinite(x, y);
+                    //}
+                    //else if (terrainTypeToolStripMenuItem == teroidalToolStripMenuItem)
+                    //{
+                    //    neighborCount = CountNeighborsToroidal(x, y);
+                    //}
+
+                    //neighborCount = CountNeighborsFinite(x, y);
+                    neighborCount = CountNeighborsToroidal(x, y);
 
                     // Apply rules of GOL
-
                     // Turn cells on/off in second array
 
-                    // Swap second array with the original "universe" array
+                    if (universe[x, y] == true && neighborCount < 2)
+                    {
+                        scratchPad[x, y] = false;
+                    }
+                    else if (universe[x, y] == true && neighborCount > 3)
+                    {
+                        scratchPad[x, y] = false;
+                    }
+                    else if (universe[x, y] == true && neighborCount == 2 || neighborCount == 3)
+                    {
+                        scratchPad[x, y] = true;
+                    }
+                    else if (universe[x, y] == false && neighborCount == 3)
+                    {
+                        scratchPad[x, y] = true;
+                    }
 
-                    // Increment generation count
-                    generations++;
+                    // Swap second array with the original 'universe' array
+                    
+                }
+            }
+
+            // Swap second array with the original 'universe' array
+
+            for (int y = 0; y < universe.GetLength(1); y++)
+            {
+                for (int x = 0; x < universe.GetLength(0); x++)
+                {
+                    universe[x, y] = scratchPad[x, y];
+                }
+            }
+
+            // Increment generation count
+            generations++;
 
             // Update status strip generations
             toolStripStatusLabelGenerations.Text = "Generations = " + generations.ToString();
+            graphicsPanel1.Invalidate();
         }
 
         private int CountNeighborsFinite(int x, int y)
@@ -106,7 +137,10 @@ namespace Game_of_Life
                         continue;
                     }
 
-                    if (universe[xCheck, yCheck] == true) count++;
+                    if (universe[xCheck, yCheck] == true)
+                    {
+                        count++;
+                    }
                 }
             }
             return count;
@@ -129,11 +163,11 @@ namespace Game_of_Life
                     }
                     else if (xCheck < 0)    // if xCheck is less than 0 then set to xLen - 1
                     {
-                        xLen = -1;
+                        xCheck = xLen - 1;
                     }
                     else if (yCheck < 0)    // if yCheck is less than 0 then set to yLen - 1
                     {
-                        yLen = -1;
+                        xCheck = yLen - 1;
                     }
                     else if (xCheck >= xLen)    // if xCheck is greater than or equal too xLen then set to 0
                     {
@@ -141,10 +175,13 @@ namespace Game_of_Life
                     }
                     else if (yCheck >= yLen)    // if yCheck is greater than or equal too yLen then set to 0
                     {
-                        yCheck = 0;
+                        xCheck = 0;
                     }
 
-                    if (universe[xCheck, yCheck] == true) count++;
+                    if (universe[xCheck, yCheck] == true)
+                    {
+                        count++;
+                    }
                 }
             }
             return count;
