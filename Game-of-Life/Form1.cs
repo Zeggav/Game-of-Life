@@ -311,6 +311,9 @@ namespace Game_of_Life
                     universe[x, y] = false;
                 }
             }
+
+            generations = 0;
+            toolStripStatusLabelGenerations.Text = "Generations = " + generations.ToString();
             graphicsPanel1.Invalidate();
         }
 
