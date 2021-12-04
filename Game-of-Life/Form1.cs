@@ -17,7 +17,7 @@ namespace Game_of_Life
 
         // Drawing colors
         Color gridColor = Color.Black;
-        Color cellColor = Color.Gray;
+        Color cellColor = Color.Cyan;
 
         // The Timer class
         Timer timer = new Timer();
@@ -25,41 +25,42 @@ namespace Game_of_Life
         // Generation count
         int generations = 0;
 
+        // Neighbors stores the number of living cells for printing to a single cell graphicsPanel1_Paint
+        int neighbors = 0;
+
+        // Neighbor Count stores the number of living cells for the GOL Logic in NextGeneration
+        int neighborCount = 0;
+
         public Form1()
         {
             InitializeComponent();
 
             // Setup the timer
-            
             timer.Interval = 100; // milliseconds
             timer.Tick += Timer_Tick;
             timer.Enabled = false; // start timer running
-
         }
 
         // Calculate the next generation of cells
-        private void NextGeneration() // Majority of work here      <<<------
+        private void NextGeneration()
         {
-            //bool isAlive = false;
-            int neighborCount = 0;
+            // ScratchPad array used tostore the next generation and replace the current 2D 'universe'
             bool[,] scratchPad = new bool[universe.GetLength(0), universe.GetLength(1)];
+
             // Itterate through current universe generation.
             for (int y = 0; y < universe.GetLength(1); y++)
             {
                 for (int x = 0; x < universe.GetLength(0); x++)
                 {
-                    //if (terrainTypeToolStripMenuItem == finiteToolStripMenuItem)
-                    //{
-                    //    // Get neighbor count per cell
-                    //    neighborCount = CountNeighborsFinite(x, y);
-                    //}
-                    //else if (terrainTypeToolStripMenuItem == teroidalToolStripMenuItem)
-                    //{
-                    //    neighborCount = CountNeighborsToroidal(x, y);
-                    //}
-
-                    //neighborCount = CountNeighborsFinite(x, y);
-                    neighborCount = CountNeighborsToroidal(x, y);
+                    // Get neighbor count per cell
+                    if (finiteToolStripMenuItem.Enabled == true)
+                    {
+                        neighborCount = CountNeighborsFinite(x, y);
+                    }
+                    else if (toroidalToolStripMenuItem.Enabled == true)
+                    {
+                        neighborCount = CountNeighborsToroidal(x, y);
+                    }
 
                     // Apply rules of GOL
                     // Turn cells on/off in second array
@@ -83,15 +84,9 @@ namespace Game_of_Life
             }
 
             // Swap second array with the original 'universe' array
-            for (int y = 0; y < universe.GetLength(1); y++)
-            {
-                for (int x = 0; x < universe.GetLength(0); x++)
-                {
-                    universe[x, y] = scratchPad[x, y];
-                }
-            }
-
-
+            bool[,] temp = universe;
+            universe = scratchPad;
+            scratchPad = temp;
 
             // Increment generation count
             generations++;
@@ -198,6 +193,12 @@ namespace Game_of_Life
             // CELL HEIGHT = WINDOW HEIGHT / NUMBER OF CELLS IN Y
             float cellHeight = (float)graphicsPanel1.ClientSize.Height / universe.GetLength(1);
 
+            // A Font for displaying info in cells (font type, font size)
+            Font font = new Font("Arial", 12f);
+            StringFormat stringFormat = new StringFormat();
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+
             // A Pen for drawing the grid lines (color, width)
             Pen gridPen = new Pen(gridColor, 1);
 
@@ -218,10 +219,26 @@ namespace Game_of_Life
                     cellRect.Width = cellWidth;
                     cellRect.Height = cellHeight;
 
+                    if (finiteToolStripMenuItem.Enabled == true)
+                    {
+                        neighbors = CountNeighborsFinite(x, y);
+                    }
+                    else if (toroidalToolStripMenuItem.Enabled == true)
+                    {
+                        
+                        neighbors = CountNeighborsToroidal(x, y);
+                    }
+
                     // Fill the cell with a brush if alive
                     if (universe[x, y] == true)
                     {
                         e.Graphics.FillRectangle(cellBrush, cellRect);
+                        e.Graphics.DrawString(neighbors.ToString(), font, Brushes.Black, cellRect, stringFormat);
+                    }
+
+                    if (universe[x,y] == false && neighbors > 0)
+                    {
+                        e.Graphics.DrawString(neighbors.ToString(), font, Brushes.Black, cellRect, stringFormat);
                     }
 
                     // Outline the cell with a pen
@@ -253,29 +270,35 @@ namespace Game_of_Life
                 universe[(int)x, (int)y] = !universe[(int)x, (int)y];
 
                 // Tell Windows you need to repaint
-                // DON'T FORGET TO CALL ME!!!           <<<--------
+                // DON'T FORGET TO CALL INVALIDATE!!!           <<<--------
                 graphicsPanel1.Invalidate();
             }
         }
 
+        // Allows the user to exit the program through File -> Exit Tool Strip
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Close();       // Allows the user to exit the program through File -> Exit Tool Strip
+            // Allows the user to exit the program through File -> Exit Tool Strip
+            this.Close();
         }
 
+        // Starts the Game of life on button click
         private void toolStripPlayButton_Click(object sender, EventArgs e)
         {
-            timer.Start();      // Starts the Game of life on button click
+            timer.Start();
         }
 
+        // Stops the Game of life on button click
         private void toolStripPauseButton_Click(object sender, EventArgs e)
         {
-            timer.Stop();       // Stops the Game of life on button click
+            timer.Stop();
         }
 
+        // Stops, then Displays the next generation
         private void toolStripOneGenFwd_Click(object sender, EventArgs e)
         {
-            NextGeneration();       // Displays the next generation
+            timer.Stop();
+            NextGeneration();
         }
 
         private void newToolStripButton_Click(object sender, EventArgs e)
@@ -289,6 +312,29 @@ namespace Game_of_Life
                 }
             }
             graphicsPanel1.Invalidate();
+        }
+
+
+        // The following methods turn on/off which terrain mode the program runs
+        // The if statements need more work to properly turn off the opposite method automatically
+        private void toroidalToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            toroidalToolStripMenuItem.Enabled = true;
+            if (finiteToolStripMenuItem.Enabled == true)
+            {
+                finiteToolStripMenuItem.Enabled = false;
+                finiteToolStripMenuItem.Checked = false;
+            }
+        }
+
+        private void finiteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            finiteToolStripMenuItem.Enabled = true;
+            if (toroidalToolStripMenuItem.Enabled == true)
+            {
+                toroidalToolStripMenuItem.Enabled = false;
+                toroidalToolStripMenuItem.Checked = false;
+            }
         }
     }
 }
